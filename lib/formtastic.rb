@@ -425,7 +425,7 @@ module Formtastic #:nodoc:
     #
     def set_options(options)
       options.except(:value_method, :label_method, :collection, :required, :label,
-                     :as, :hint, :input_html, :label_html, :value_as_class)
+                     :as, :hint, :input_html, :label_html, :value_as_class, :options)
     end
 
     # Create a default button text. If the form is working with a object, it
@@ -577,8 +577,13 @@ module Formtastic #:nodoc:
     # By default, all select inputs will have a blank option at the top of the list. You can add
     # a prompt with the :prompt option, or disable the blank option with :include_blank => false.
     #
-    def select_input(method, options)
-      collection = find_collection_for_column(method, options)
+    def select_input(method, options)    
+      collection = if options[:options]
+        use_options_for_select(options)
+      else
+        find_collection_for_column(method, options)
+      end
+      
       html_options = options.delete(:input_html) || {}
 
       unless options.key?(:include_blank) || options.key?(:prompt)
@@ -1043,6 +1048,15 @@ module Formtastic #:nodoc:
       end
     end
 
+    # Used by select input to allow use of the Rails option helpers, i.e.
+    #
+    # :options => option_groups_from_collection_for_select(@continents, :countries, :name, :id, :name, 3)
+    #
+    def use_options_for_select(options)
+      raise "Can not provide :options and :collection for a select" if options[:collection]
+      options.delete(:options)
+    end
+    
     # Used by select and radio inputs. The collection can be retrieved by
     # three ways:
     #

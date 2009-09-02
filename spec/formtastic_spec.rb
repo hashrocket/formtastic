@@ -1824,6 +1824,27 @@ describe 'Formtastic' do
           @new_post.stub!(:author_id).and_return(@bob.id)
           @new_post.stub!(:column_for_attribute).and_return(mock('column', :type => :integer, :limit => 255))
         end
+        
+        describe 'when the :options option is provided to a :select type' do
+          it "raises an error if the :collection option is also provided" do
+            lambda do
+              semantic_form_for(@new_post) do |builder|
+                builder.input(:author, :as => :select, :options => 'options', :collection => [])
+              end
+            end.should raise_error
+          end
+          
+          it "uses the :options value as the content for the select tag" do
+            options = '<option value="Text Value" data-key="custom attribute">Text Content</option>'
+            
+            semantic_form_for(@new_post) do |builder|
+              concat(builder.input(:author, :as => :select, :options => options))
+            end
+            
+            output_buffer.should have_tag("form li.select select option", "")
+            output_buffer.should have_tag("form li.select select option", "Text Content")
+          end
+        end
 
         { :select => :option, :radio => :input, :check_boxes => :'input[@type="checkbox"]' }.each do |type, countable|
 
